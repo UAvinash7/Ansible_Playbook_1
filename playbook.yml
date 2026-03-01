@@ -1,0 +1,31 @@
+---
+- name: Run Cisco IOS Commands and Email Output
+  hosts: cisco_devices
+  gather_facts: false
+  connection: network_cli
+
+  tasks:
+    - name: Execute show commands on Cisco IOS
+      cisco.ios.ios_command:
+        commands:
+          - show version
+          - show ip interface brief
+      register: command_output
+
+    - name: Send email with command results
+      community.general.mail:
+        host: smtp.example.com
+        port: 587
+        username: "automation@example.com"
+        password: "your_password"
+        to: "admin@example.com"
+        subject: "Cisco Device Report - {{ inventory_hostname }}"
+        body: |
+          Ansible Report for {{ inventory_hostname }}
+          
+          OUTPUT FOR 'show version':
+          {{ command_output.stdout[0] }}
+          
+          OUTPUT FOR 'show ip interface brief':
+          {{ command_output.stdout[1] }}
+      delegate_to: localhost
